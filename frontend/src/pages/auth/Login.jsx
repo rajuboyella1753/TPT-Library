@@ -82,7 +82,7 @@ const LoginPage = () => {
                 <BookOpen className="text-white w-8 h-8" />
               </motion.div>
               <h1 className="text-3xl md:text-4xl font-black text-gray-800 tracking-tight">
-                Elahi <span className="text-orange-500">Book</span> <span className="text-blue-600">Stall</span>
+                TPT ICEU <span className="text-orange-500">Book</span> <span className="text-blue-600">Stall</span>
               </h1>
               <p className="text-gray-500 mt-2 font-medium">Welcome back! Please login to continue</p>
             </div>

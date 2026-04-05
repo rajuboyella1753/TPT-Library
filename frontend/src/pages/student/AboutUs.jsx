@@ -97,7 +97,7 @@ export default function AboutUs() {
         <div className="text-center mb-10">
           <h3 className="text-xl font-black text-slate-800 uppercase tracking-tight flex items-center justify-center gap-3">
             <Sparkles className="text-orange-500" size={20} /> 
-            {activeTab === 'brothers' ? 'The Pillars' : 'The Fragrance'} of ICEU TPT
+            {activeTab === 'brothers' ? 'The Students' : 'The Students'} of ICEU TPT
           </h3>
           <p className="text-slate-400 text-[10px] font-bold uppercase tracking-[0.3em] mt-2 italic">Click each stone to see their spirit</p>
         </div>

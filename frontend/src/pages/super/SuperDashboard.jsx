@@ -80,7 +80,7 @@ export default function SuperDashboard() {
           <div className="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center">
             <ShieldCheck size={20} />
           </div>
-          <span className="font-black tracking-tighter">ELAHI</span>
+          <span className="font-black tracking-tighter">TPT ICEU</span>
         </div>
         <button onClick={toggleSidebar} className="p-2 bg-white/10 rounded-lg text-white">
           {isSidebarOpen ? <X size={24} /> : <Menu size={24} />}
@@ -94,7 +94,7 @@ export default function SuperDashboard() {
             <ShieldCheck size={30} className="text-white" />
           </div>
           <div>
-            <h2 className="text-2xl font-black tracking-tighter">ELAHI</h2>
+            <h2 className="text-2xl font-black tracking-tighter">TPT ICEU</h2>
             <p className="text-[10px] font-bold text-orange-400 tracking-[0.3em]">SUPREME CONTROL</p>
           </div>
         </div>

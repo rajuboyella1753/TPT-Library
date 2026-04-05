@@ -56,7 +56,7 @@ const RegisterPage = () => {
             <div className="inline-flex items-center justify-center w-14 h-14 bg-gradient-to-br from-blue-600 to-orange-500 rounded-2xl mb-4 text-white">
               <UserPlus className="w-7 h-7" />
             </div>
-            <h1 className="text-3xl font-black text-gray-800">Join Elahi Book Stall</h1>
+            <h1 className="text-3xl font-black text-gray-800">Join TPT ICEU Book Stall</h1>
           </div>
 
           <form onSubmit={handleRegister} className="grid grid-cols-1 md:grid-cols-2 gap-4">

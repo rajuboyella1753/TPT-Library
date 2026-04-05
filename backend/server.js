@@ -3,35 +3,48 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const dotenv = require('dotenv');
 const authRoutes = require('./routes/authRoutes'); 
-const bookRoutes = require('./routes/books'); // <--- Ee line add chesa (Check file name correctly)
+const bookRoutes = require('./routes/books'); 
 const wishlistRoutes = require('./routes/wishlistRoutes');
-// Config load chey
-dotenv.config();
 
+dotenv.config();
 const app = express();
 
-// Middlewares
-app.use(cors());
-app.use(express.json()); 
+// --- CORS CONFIGURATION (Idi okkate unchu mama) ---
+const allowedOrigins = [
+  'http://localhost:5173', 
+  'https://book-stall-25935.web.app', 
+  'https://book-stall-25935.firebaseapp.com'
+];
 
-// Static folder for images
+app.use(cors({
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error('CORS block chesindi mama!'));
+    }
+  },
+  credentials: true
+}));
+
+// --- MIDDLEWARES ---
+app.use(express.json()); 
 app.use('/uploads', express.static('uploads'));
 
-// Routes Link Cheyadam
+// --- ROUTES ---
 app.use('/api/auth', authRoutes); 
-app.use('/api/books', bookRoutes); // <--- IDI MISS AYYINDI! Ippudu 404 error raadu.
+app.use('/api/books', bookRoutes); 
 app.use('/api/wishlist', wishlistRoutes);
-// Database Connection
+
+// --- DATABASE CONNECTION ---
 mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log("✅ Elahi Book Stall Database Connected!"))
   .catch((err) => console.log("❌ DB Connection Error:", err));
 
-// Basic Route
 app.get('/', (req, res) => {
   res.send("Elahi Book Stall Server is Running...");
 });
 
-// Port Setup
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`🚀 Server running on http://localhost:${PORT}`);

@@ -5,7 +5,7 @@ import {
   LogOut, Search, Heart, 
   BookOpen, ChevronRight, Menu, X, 
   Home, Sparkles, AlertCircle, 
-  Zap, Plus, CheckCircle2, XCircle, Send, ArrowUpRight, HelpCircle, Mail, Info, Phone
+  Zap, Plus, CheckCircle2, XCircle, Send, ArrowUpRight, HelpCircle, Mail, Info, Phone , ChevronDown
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../api/api';
@@ -178,10 +178,6 @@ export default function StudentDashboard() {
              <button onClick={() => setIsSidebarOpen(true)} className="lg:hidden p-2 bg-slate-100 text-slate-600 rounded-xl hover:bg-orange-500 hover:text-white transition-all">
                 <Menu size={20} />
              </button>
-             <div className="hidden sm:flex items-center gap-2 ml-2 lg:ml-0">
-                <img src="/UESI.png" alt="Logo" className="w-8 h-8 object-contain" />
-                <span className="font-black text-lg tracking-tighter">ICEU TPT <span className="text-orange-500 uppercase">World</span></span>
-             </div>
           </div>
           
           <div className="relative w-full max-w-xs md:max-w-md mx-4">
@@ -205,95 +201,117 @@ export default function StudentDashboard() {
         </nav>
 
         <main className="p-4 sm:p-6 lg:p-10">
-          <div className="max-w-7xl mx-auto">
-            
-            {/* --- 1. LIBRARY HOME PAGE --- */}
-            {activePage === 'home' && (
-              <>
-                {/* Range Filter UI */}
-                <div className="mb-8 bg-white/50 backdrop-blur-md p-4 sm:p-6 rounded-[1.5rem] sm:rounded-[2rem] border border-white shadow-sm flex flex-col md:flex-row items-center justify-between gap-6">
-                  <div className="flex flex-col gap-1 text-center md:text-left">
-                    <h4 className="text-[10px] font-black text-orange-500 uppercase tracking-[0.2em]">Display Filter</h4>
-                    <p className="text-xs sm:text-sm font-bold text-slate-700">Showing up to <span className="text-orange-600 text-base sm:text-lg">{bookLimit}</span> Books</p>
-                  </div>
-                  
-                  <div className="flex items-center gap-4 w-full md:w-72">
-                    <span className="text-[10px] font-bold text-slate-400">1</span>
-                    <input 
-                      type="range" min="1" max="100" value={bookLimit} 
-                      onChange={(e) => setBookLimit(parseInt(e.target.value))}
-                      className="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-orange-500"
-                    />
-                    <span className="text-[10px] font-bold text-slate-400">100</span>
-                  </div>
-                </div>
+  <div className="max-w-7xl mx-auto">
+    
+    {/* --- 1. LIBRARY HOME PAGE --- */}
+    {activePage === 'home' && (
+      <>
+        {/* NEW HEADER SECTION WITH LOGO & DROPDOWN FILTER */}
+        <div className="mb-12 flex flex-col md:flex-row items-center justify-between gap-8 bg-white/40 backdrop-blur-md p-6 rounded-[2.5rem] border border-white/50 shadow-sm">
+          {/* Logo + Name Section */}
+          <div className="flex items-center gap-4">
+            <div className="p-2 bg-white rounded-2xl shadow-sm border border-slate-100">
+              <img src="/UESI.png" alt="Logo" className="w-12 h-12 sm:w-16 sm:h-16 object-contain" />
+            </div>
+            <div>
+              <h1 className="text-2xl sm:text-4xl font-black text-slate-900 tracking-tighter uppercase leading-none">
+                TPT <span className="text-orange-500">ICEU</span>
+              </h1>
+              <p className="text-[10px] sm:text-xs font-bold text-slate-400 uppercase tracking-[0.4em] mt-1">Book Stall</p>
+            </div>
+          </div>
 
-                <div className="mb-10 text-center md:text-left">
-                  <h1 className="text-2xl sm:text-3xl lg:text-5xl font-black text-slate-900 tracking-tighter leading-tight">
-                    Discover Your <span className="text-orange-500 italic">Divine Path.</span>
-                  </h1>
-                  <p className="text-slate-500 mt-2 font-medium text-xs sm:text-sm lg:text-base">Explore our curated collection of Spiritual Wisdom.</p>
-                </div>
+          {/* New Dropdown Filter Section */}
+          <div className="flex items-center gap-3 bg-slate-100/50 px-5 py-3 rounded-2xl border border-slate-200 w-full md:w-auto">
+            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest whitespace-nowrap">Show Limit:</span>
+            <div className="relative flex-1 md:w-32">
+              <select 
+                value={bookLimit} 
+                onChange={(e) => setBookLimit(Number(e.target.value))}
+                className="w-full bg-transparent text-sm font-black text-slate-800 outline-none appearance-none cursor-pointer pr-6"
+              >
+                <option value={10}>10 Books</option>
+                <option value={20}>20 Books</option>
+                <option value={50}>50 Books</option>
+                <option value={100}>100 Books</option>
+                <option value={200}>200 Books</option>
+                <option value={500}>All Items</option>
+              </select>
+              <ChevronDown size={14} className="absolute right-0 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+            </div>
+          </div>
+        </div>
 
-                {loading ? (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
-                    {[1,2,3].map(n => <div key={n} className="h-96 bg-white animate-pulse rounded-[2rem] border border-slate-100" />)}
-                  </div>
-                ) : displayedBooks.length > 0 ? (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6 sm:gap-8 pb-20">
-                    <AnimatePresence mode='popLayout'>
-                      {displayedBooks.map((book) => (
-                        <motion.div 
-                          key={book._id} layout
-                          initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
-                          exit={{ opacity: 0, scale: 0.9 }}
-                          whileHover={{ y: -6 }}
-                          className="group bg-white/70 backdrop-blur-lg border border-white rounded-[2rem] p-3 sm:p-4 flex flex-col h-full hover:shadow-2xl hover:shadow-orange-100 transition-all duration-500 shadow-xl"
-                        >
-                          <div className="relative w-full aspect-[3/4] rounded-[1.5rem] overflow-hidden mb-5 bg-slate-50 border border-slate-100 shadow-inner">
-                            <img src={`${API_BASE_URL}${book.image}`} alt={book.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
-                          </div>
+        {/* Hero Title Area */}
+        <div className="mb-10 text-center md:text-left">
+          <h2 className="text-3xl lg:text-5xl font-black text-slate-900 tracking-tighter leading-tight">
+            Discover Your <span className="text-orange-500 italic">Divine Path.</span>
+          </h2>
+          <p className="text-slate-500 mt-2 font-medium text-sm lg:text-base">Explore our curated collection of Spiritual Wisdom.</p>
+        </div>
 
-                          <div className="flex-1 flex flex-col px-1 sm:px-2">
-                            <div className="flex justify-between items-start mb-2">
-                              <span className="text-[8px] font-black text-orange-500 uppercase tracking-widest bg-orange-50 px-2.5 py-1 rounded-full border border-orange-100">Spiritual</span>
-                              <div className={`px-2.5 py-1 rounded-full text-[8px] font-black uppercase tracking-widest flex items-center gap-1.5 border ${
-                                  book.status === 'Borrowed' ? 'bg-blue-50 text-blue-600 border-blue-100' : 
-                                  book.status === 'Out of Stock' ? 'bg-red-50 text-red-600 border-red-100' :
-                                  'bg-green-50 text-green-600 border-green-100'
-                              }`}>
-                                  {book.status === 'Borrowed' ? <HelpCircle size={8}/> : book.status === 'Out of Stock' ? <XCircle size={8}/> : <CheckCircle2 size={8}/>}
-                                  {book.status || 'Available'}
-                              </div>
-                            </div>
-                            <h3 className="text-lg sm:text-xl font-black text-slate-900 leading-tight mb-1 uppercase tracking-tight line-clamp-1">{book.title}</h3>
-                            <p className="text-slate-400 font-bold italic text-[10px] mb-3">by {book.author}</p>
-                            {book.description && <p className="text-slate-500 text-[10px] leading-relaxed line-clamp-2 mb-4 font-medium opacity-80">{book.description}</p>}
-                            <div className="mt-auto flex items-center gap-2 pt-2">
-                              <button onClick={() => handleRequestClick(book)} className={`flex-1 py-3.5 sm:py-4 rounded-xl sm:rounded-2xl font-black text-[9px] uppercase tracking-widest transition-all flex items-center justify-center gap-2 ${book.status === 'Available' ? 'bg-slate-900 text-white hover:bg-orange-500 shadow-lg' : 'bg-slate-100 text-slate-400 cursor-not-allowed'}`}>
-                                {book.status === 'Available' ? 'Request' : book.status} <ArrowUpRight size={12} />
-                              </button>
-                              <button onClick={() => toggleWishlist(book._id)} className={`px-4 sm:px-5 py-3.5 sm:py-4 rounded-xl sm:rounded-2xl border-2 transition-all flex items-center justify-center font-black ${wishlist.includes(book._id) ? 'bg-orange-50 border-orange-500 text-orange-600' : 'bg-white border-slate-200 text-slate-400 hover:text-orange-500'}`}>
-                                {wishlist.includes(book._id) ? <CheckCircle2 size={16} /> : <Plus size={16} />}
-                              </button>
-                            </div>
-                          </div>
-                        </motion.div>
-                      ))}
-                    </AnimatePresence>
+        {/* Books Grid Logic - Keep your existing loading and displayedBooks logic here */}
+        {loading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+            {[1,2,3].map(n => <div key={n} className="h-96 bg-white animate-pulse rounded-[2rem] border border-slate-100" />)}
+          </div>
+        ) : displayedBooks.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6 sm:gap-8 pb-20">
+            <AnimatePresence mode='popLayout'>
+              {displayedBooks.map((book) => (
+                <motion.div 
+                  key={book._id} layout
+                  initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                  whileHover={{ y: -6 }}
+                  className="group bg-white/70 backdrop-blur-lg border border-white rounded-[2rem] p-3 sm:p-4 flex flex-col h-full hover:shadow-2xl hover:shadow-orange-100 transition-all duration-500 shadow-xl"
+                >
+                  <div className="relative w-full aspect-[3/4] rounded-[1.5rem] overflow-hidden mb-5 bg-slate-50 border border-slate-100 shadow-inner">
+                    <img src={`${API_BASE_URL}${book.image}`} alt={book.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
                   </div>
-                ) : (
-                  <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col items-center justify-center py-20 px-6 bg-white/70 backdrop-blur-md border-2 border-dashed border-slate-300 rounded-[2.5rem] text-center shadow-xl">
-                    <Search size={32} className="text-orange-500 mb-4" />
-                    <h3 className="text-xl sm:text-2xl font-black text-slate-900 uppercase tracking-tighter mb-4">Sorry, "{searchTerm}" is not found</h3>
-                    <button onClick={handleCustomRequest} disabled={isSending} className="px-6 sm:px-8 py-3.5 sm:py-4 bg-orange-500 text-white rounded-xl sm:rounded-2xl font-black text-[9px] uppercase tracking-widest shadow-lg flex items-center gap-2">
-                        {isSending ? "Sending..." : "Request This Book"} <Mail size={14}/>
-                    </button>
-                    <button onClick={() => setSearchTerm('')} className="mt-4 text-[9px] font-black uppercase text-slate-400 hover:text-orange-500">Clear Search</button>
-                  </motion.div>
-                )}
-              </>
-            )}
+
+                  <div className="flex-1 flex flex-col px-1 sm:px-2">
+                    <div className="flex justify-between items-start mb-2">
+                      <span className="text-[8px] font-black text-orange-500 uppercase tracking-widest bg-orange-50 px-2.5 py-1 rounded-full border border-orange-100">Spiritual</span>
+                      <div className={`px-2.5 py-1 rounded-full text-[8px] font-black uppercase tracking-widest flex items-center gap-1.5 border ${
+                          book.status === 'Borrowed' ? 'bg-blue-50 text-blue-600 border-blue-100' : 
+                          book.status === 'Out of Stock' ? 'bg-red-50 text-red-600 border-red-100' :
+                          'bg-green-50 text-green-600 border-green-100'
+                      }`}>
+                          {book.status === 'Borrowed' ? <HelpCircle size={8}/> : book.status === 'Out of Stock' ? <XCircle size={8}/> : <CheckCircle2 size={8}/>}
+                          {book.status || 'Available'}
+                      </div>
+                    </div>
+                    <h3 className="text-lg sm:text-xl font-black text-slate-900 leading-tight mb-1 uppercase tracking-tight line-clamp-1">{book.title}</h3>
+                    <p className="text-slate-400 font-bold italic text-[10px] mb-3">by {book.author}</p>
+                    {book.description && <p className="text-slate-500 text-[10px] leading-relaxed line-clamp-2 mb-4 font-medium opacity-80">{book.description}</p>}
+                    <div className="mt-auto flex items-center gap-2 pt-2">
+                      <button onClick={() => handleRequestClick(book)} className={`flex-1 py-3.5 sm:py-4 rounded-xl sm:rounded-2xl font-black text-[9px] uppercase tracking-widest transition-all flex items-center justify-center gap-2 ${book.status === 'Available' ? 'bg-slate-900 text-white hover:bg-orange-500 shadow-lg' : 'bg-slate-100 text-slate-400 cursor-not-allowed'}`}>
+                        {book.status === 'Available' ? 'Request' : book.status} <ArrowUpRight size={12} />
+                      </button>
+                      <button onClick={() => toggleWishlist(book._id)} className={`px-4 sm:px-5 py-3.5 sm:py-4 rounded-xl sm:rounded-2xl border-2 transition-all flex items-center justify-center font-black ${wishlist.includes(book._id) ? 'bg-orange-50 border-orange-500 text-orange-600' : 'bg-white border-slate-200 text-slate-400 hover:text-orange-500'}`}>
+                        {wishlist.includes(book._id) ? <CheckCircle2 size={16} /> : <Plus size={16} />}
+                      </button>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </AnimatePresence>
+          </div>
+        ) : (
+          /* NO BOOKS FOUND - Keep your existing no books logic */
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col items-center justify-center py-20 px-6 bg-white/70 backdrop-blur-md border-2 border-dashed border-slate-300 rounded-[2.5rem] text-center shadow-xl">
+            <Search size={32} className="text-orange-500 mb-4" />
+            <h3 className="text-xl sm:text-2xl font-black text-slate-900 uppercase tracking-tighter mb-4">Sorry, "{searchTerm}" is not found</h3>
+            <button onClick={handleCustomRequest} disabled={isSending} className="px-6 sm:px-8 py-3.5 sm:py-4 bg-orange-500 text-white rounded-xl sm:rounded-2xl font-black text-[9px] uppercase tracking-widest shadow-lg flex items-center gap-2">
+                {isSending ? "Sending..." : "Request This Book"} <Mail size={14}/>
+            </button>
+          </motion.div>
+        )}
+      </>
+    )}
+
+    {/* Keep Wishlist, About, Contact logic exactly same as before below this */}
 
             {/* --- 2. MY WISHLIST PAGE --- */}
             {activePage === 'wishlist' && (

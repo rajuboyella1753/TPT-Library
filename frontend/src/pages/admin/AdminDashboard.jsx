@@ -100,7 +100,7 @@ const deleteBook = async (id) => {
             <div className="bg-orange-500 p-2.5 rounded-2xl shadow-lg shadow-orange-500/30">
               <BookOpen size={24} className="text-white" />
             </div>
-            <span className="text-xl font-black tracking-tight uppercase italic">ELAHI <span className="text-orange-500">ADMIN</span></span>
+            <span className="text-xl font-black tracking-tight uppercase italic">TPT ICEU <span className="text-orange-500">ADMIN</span></span>
           </div>
 
           <nav className="flex-1 space-y-2">
@@ -150,7 +150,7 @@ const deleteBook = async (id) => {
                   
                   <div className="mb-10 text-center lg:text-left">
                     <h2 className="text-3xl font-black text-slate-900 tracking-tighter uppercase mb-2">Publish a Book</h2>
-                    <p className="text-slate-500 font-medium">Add divine knowledge to the Elahi collection.</p>
+                    <p className="text-slate-500 font-medium">Add divine knowledge to the TPT ICEU collection.</p>
                   </div>
 
                   <form onSubmit={handleAddBook} className="space-y-6">
@@ -275,7 +275,7 @@ const deleteBook = async (id) => {
         </main>
 
         <footer className="p-6 text-center text-slate-400 text-[10px] font-black tracking-[0.3em] border-t border-white/20 bg-white/50 backdrop-blur-sm uppercase">
-          © 2026 ELAHI BOOK WORLD | SECURE ADMIN DASHBOARD | VERSION 2.0
+          © 2026 TPT ICEU BOOK WORLD | SECURE ADMIN DASHBOARD | VERSION 2.0
         </footer>
       </div>
     </div>
