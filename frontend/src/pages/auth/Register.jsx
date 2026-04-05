@@ -21,21 +21,37 @@ const RegisterPage = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleRegister = async (e) => {
-    e.preventDefault();
-    if (formData.password !== formData.confirmPassword) {
-      alert("Passwords do not match!");
-      return;
-    }
-    try {
-      const res = await api.post('/auth/register', formData);
-      alert(res.data.message);
-      navigate('/login');
-    } catch (err) {
-      const errorMsg = err.response?.data?.message || "Something went wrong!";
-      alert(errorMsg);
-    }
-  };
+const handleRegister = async (e) => {
+  e.preventDefault();
+  
+  // 1. Password Match Check
+  if (formData.password !== formData.confirmPassword) {
+    alert("Passwords do not match ! ❌");
+    return;
+  }
+
+  try {
+    // 2. Data Cleaning before sending
+    const registrationData = {
+      name: formData.name.trim(),
+      email: formData.email.toLowerCase().trim(), // Mobile keyboard caps fix
+      password: formData.password,
+      role: formData.role || 'student'
+    };
+
+    // 3. API Call
+    const res = await api.post('/auth/register', registrationData);
+    
+    alert(res.data.message || "Registration Successful! 🥳");
+    navigate('/login');
+    
+  } catch (err) {
+    // 4. Detailed Error handling
+    const errorMsg = err.response?.data?.message || "Something went wrong! Please try again.";
+    alert(errorMsg);
+    console.error("Registration Error:", err.response?.data);
+  }
+};
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#f0f4f8] relative overflow-hidden p-4 md:p-8">

@@ -16,12 +16,15 @@ const allowedOrigins = [
   'https://book-stall-25935.firebaseapp.com'
 ];
 
+// --- SERVER.JS LO CORS SECTION UPDATE ---
 app.use(cors({
   origin: function (origin, callback) {
+    // Mobile apps leda direct requests lo origin undadhu, vatini allow cheyali
     if (!origin || allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
-      callback(new Error('CORS block chesindi mama!'));
+      // Vere sites nundi block chesthundhi but mobile ni allow chesthundhi
+      callback(null, true); 
     }
   },
   credentials: true

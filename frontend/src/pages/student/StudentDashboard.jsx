@@ -267,7 +267,8 @@ export default function StudentDashboard() {
                   className="group bg-white/70 backdrop-blur-lg border border-white rounded-[2rem] p-3 sm:p-4 flex flex-col h-full hover:shadow-2xl hover:shadow-orange-100 transition-all duration-500 shadow-xl"
                 >
                   <div className="relative w-full aspect-[3/4] rounded-[1.5rem] overflow-hidden mb-5 bg-slate-50 border border-slate-100 shadow-inner">
-                    <img src={`${API_BASE_URL}${book.image}`} alt={book.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                    // Wishlist lo image tag ila undali:
+                    <img src={`${API_BASE_URL.replace('/api', '')}${book.image}`} className="w-full h-full object-cover" alt={book.title} />
                   </div>
 
                   <div className="flex-1 flex flex-col px-1 sm:px-2">
@@ -322,7 +323,11 @@ export default function StudentDashboard() {
                      {displayedBooks.map((book) => (
                         <motion.div key={book._id} className="bg-white/70 backdrop-blur-lg border border-white rounded-[2rem] p-4 shadow-xl">
                            <div className="relative w-full aspect-[3/4] rounded-[1.5rem] overflow-hidden mb-4">
-                              <img src={`${API_BASE_URL}${book.image}`} className="w-full h-full object-cover" alt={book.title} />
+                              <img 
+                                src={`${API_BASE_URL.replace('/api', '')}${book.image}`} 
+                                alt={book.title} 
+                                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
+                              />
                            </div>
                            <h3 className="font-black text-slate-900 uppercase text-base sm:text-lg line-clamp-1 mb-4">{book.title}</h3>
                            <button onClick={() => toggleWishlist(book._id)} className="w-full py-3.5 sm:py-4 bg-red-50 text-red-600 rounded-xl sm:rounded-2xl font-black text-[9px] uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all">Remove</button>

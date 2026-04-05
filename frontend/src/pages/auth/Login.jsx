@@ -33,32 +33,37 @@ const LoginPage = () => {
     }
   };
 
-  const handleLogin = async (e) => {
-    e.preventDefault();
-    try {
-      const res = await api.post('/auth/login', {
-        email: formData.email,
-        password: formData.password
-      });
+// --- LOGINPAGE.JS LO handleLogin FUNCTION UPDATE ---
+const handleLogin = async (e) => {
+  e.preventDefault();
+  try {
+    const res = await api.post('/auth/login', {
+      // Mobile capitals and spaces fix cheyadaaniki trim & lowercase
+      email: formData.email.toLowerCase().trim(), 
+      password: formData.password
+    });
 
-      const { token, user } = res.data;
-      localStorage.setItem('token', token);
-      localStorage.setItem('user', JSON.stringify(user));
+    const { token, user } = res.data;
+    localStorage.setItem('token', token);
+    localStorage.setItem('user', JSON.stringify(user));
 
-      alert(`Welcome back, ${user.name}! Login Successful.`);
+    alert(`Welcome back, ${user.name}! Login Successful.`);
 
-      if (user.role === 'super-admin') {
-        navigate('/super-admin');
-      } else if (user.role === 'admin') {
-        navigate('/admin');
-      } else {
-        navigate('/student');
-      }
-    } catch (err) {
-      const errorMsg = err.response?.data?.message || "Invalid Credentials!";
-      alert(errorMsg);
+    // Role based navigation
+    if (user.role === 'super-admin') {
+      navigate('/super-admin');
+    } else if (user.role === 'admin') {
+      navigate('/admin');
+    } else {
+      navigate('/student');
     }
-  };
+  } catch (err) {
+    // Detailed error message from backend
+    const errorMsg = err.response?.data?.message || "Invalid Credentials!";
+    alert(errorMsg);
+    console.error("Login Error Details:", err.response?.data);
+  }
+};
 
   return (
     <> {/* <--- Idhi Fragment, rendered content motham deeni lopale undali */}
