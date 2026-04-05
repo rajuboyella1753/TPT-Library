@@ -26,7 +26,7 @@ export default function StudentDashboard() {
   const [isSending, setIsSending] = useState(false);
   const [bookLimit, setBookLimit] = useState(100);
   const user = JSON.parse(localStorage.getItem('user')) || { name: 'Seeker' };
-  const API_BASE_URL = "http://localhost:5000";
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
   useEffect(() => {
     fetchBooks();

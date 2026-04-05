@@ -214,7 +214,7 @@ const deleteBook = async (id) => {
                   {filteredBooks.map(book => (
                     <motion.div key={book._id} layout className="bg-white/80 backdrop-blur-sm border border-white rounded-[2.5rem] p-5 shadow-xl hover:shadow-2xl transition-all group">
                       <div className="relative aspect-[3/4] rounded-[2rem] overflow-hidden mb-4 shadow-md bg-slate-100">
-                        <img src={`http://localhost:5000${book.image}`} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                        <img src={`${import.meta.env.VITE_API_BASE_URL.replace('/api', '')}${book.image}`} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                         <div className={`absolute top-3 left-3 px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest backdrop-blur-md border ${
                           book.status === 'Available' ? 'bg-green-500/20 text-green-700 border-green-200' : 
                           book.status === 'Borrowed' ? 'bg-blue-500/20 text-blue-700 border-blue-200' : 
