@@ -26,18 +26,19 @@ router.post('/request-book', async (req, res) => {
         return res.status(500).json({ message: ".env config missing!" });
     }
 
-   // routes/books.js lo ee section update chey
+// routes/books.js
 const transporter = nodemailer.createTransport({
     host: 'smtp.gmail.com',
-    port: 465,
-    secure: true, // Port 465 vaaduthunnam kabatti idi true undali
+    port: 587,
+    secure: false, // Port 587 ki idi false undali
     auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS
     },
     tls: {
-        // Railway IPv6 issues avoid cheyadaniki idi chala important
-        rejectUnauthorized: false
+        // Railway network issues fix cheyadaniki idi compulsory mama
+        rejectUnauthorized: false,
+        minVersion: 'TLSv1.2'
     }
 });
 
