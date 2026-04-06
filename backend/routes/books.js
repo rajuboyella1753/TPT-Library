@@ -26,13 +26,20 @@ router.post('/request-book', async (req, res) => {
         return res.status(500).json({ message: ".env config missing!" });
     }
 
-    const transporter = nodemailer.createTransport({
-        service: 'gmail',
-        auth: {
-            user: process.env.EMAIL_USER,
-            pass: process.env.EMAIL_PASS
-        }
-    });
+   // routes/books.js lo ee section update chey
+const transporter = nodemailer.createTransport({
+    host: 'smtp.gmail.com',
+    port: 465,
+    secure: true, // Port 465 vaaduthunnam kabatti idi true undali
+    auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS
+    },
+    tls: {
+        // Railway IPv6 issues avoid cheyadaniki idi chala important
+        rejectUnauthorized: false
+    }
+});
 
     const mailOptions = {
         from: process.env.EMAIL_USER,
