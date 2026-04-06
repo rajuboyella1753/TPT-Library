@@ -99,23 +99,44 @@ export default function StudentDashboard() {
     }
   };
 
-  const confirmRequest = async () => {
-    setIsSending(true);
-    try {
-        const requestData = {
-            studentName: user.name,
-            studentEmail: user.email,
-            bookTitle: selectedBook.title,
-        };
-        await api.post('/books/request-book', requestData);
-        alert(`Request for "${selectedBook.title}" sent! 🙏`);
-        setShowModal(false);
-    } catch (err) {
-        alert("Failed to send request.");
-    } finally {
-        setIsSending(false);
+const confirmRequest = async () => {
+  console.log("🚀 Request Start అయ్యింది mama!");
+  setIsSending(true);
+
+  try {
+    const freshUser = JSON.parse(localStorage.getItem('user'));
+    console.log("👤 User Data:", freshUser);
+
+    if (!freshUser || !freshUser.email) {
+      alert("Session expired mama! Please login again. 🙏");
+      navigate('/login');
+      return;
     }
-  };
+
+    const requestData = {
+      studentName: freshUser.name,
+      studentEmail: freshUser.email,
+      bookTitle: selectedBook?.title, // Optional chaining add chesa safety kosam
+    };
+
+    console.log("📦 Sending Data to Backend:", requestData);
+
+    // Ikkada timeout handle cheyalani direct api call chestunnam
+    const res = await api.post('/books/request-book', requestData);
+    
+    console.log("✅ Backend Response:", res.data);
+    alert(`Request for "${selectedBook.title}" sent! 🙏`);
+    setShowModal(false);
+
+  } catch (err) {
+    console.error("❌ Request Fail అయ్యింది mama:", err);
+    const errorMsg = err.response?.data?.message || err.message || "Network Error";
+    alert("Server error: " + errorMsg);
+  } finally {
+    console.log("🏁 Loading stop అయ్యింది.");
+    setIsSending(false);
+  }
+};
 
   const displayedBooks = books
     .filter(book => {
