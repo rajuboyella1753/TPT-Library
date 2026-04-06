@@ -38,7 +38,7 @@ const handleLogin = async (e) => {
   e.preventDefault();
   try {
     const res = await api.post('/auth/login', {
-      // Mobile capitals and spaces fix cheyadaaniki trim & lowercase
+      // Deeni valla mobile capital letters issue fix avtundi
       email: formData.email.toLowerCase().trim(), 
       password: formData.password
     });

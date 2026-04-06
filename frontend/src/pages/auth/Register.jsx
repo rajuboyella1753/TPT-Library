@@ -23,33 +23,31 @@ const RegisterPage = () => {
 
 const handleRegister = async (e) => {
   e.preventDefault();
-  
-  // 1. Password Match Check
   if (formData.password !== formData.confirmPassword) {
-    alert("Passwords do not match ! ❌");
+    alert("Passwords do not match! ❌");
     return;
   }
 
   try {
-    // 2. Data Cleaning before sending
+    // 1. Correct Role Logic logic add cheyali
+    let finalRole = formData.roleType; 
+    if (formData.roleType === 'admin') {
+      finalRole = formData.adminLevel; // 'admin' or 'super-admin' pick chestundi
+    }
+
     const registrationData = {
       name: formData.name.trim(),
-      email: formData.email.toLowerCase().trim(), // Mobile keyboard caps fix
+      email: formData.email.toLowerCase().trim(),
       password: formData.password,
-      role: formData.role || 'student'
+      role: finalRole, // correct role key ikkada assign chesa
+      mobile: formData.mobile // Schema lo mobile undi kabatti idi add chey
     };
 
-    // 3. API Call
     const res = await api.post('/auth/register', registrationData);
-    
-    alert(res.data.message || "Registration Successful! 🥳");
+    alert(res.data.message || "Success!");
     navigate('/login');
-    
   } catch (err) {
-    // 4. Detailed Error handling
-    const errorMsg = err.response?.data?.message || "Something went wrong! Please try again.";
-    alert(errorMsg);
-    console.error("Registration Error:", err.response?.data);
+    alert(err.response?.data?.message || "Something went wrong!");
   }
 };
 

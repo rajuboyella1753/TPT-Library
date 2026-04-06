@@ -267,7 +267,7 @@ export default function StudentDashboard() {
                   className="group bg-white/70 backdrop-blur-lg border border-white rounded-[2rem] p-3 sm:p-4 flex flex-col h-full hover:shadow-2xl hover:shadow-orange-100 transition-all duration-500 shadow-xl"
                 >
                   <div className="relative w-full aspect-[3/4] rounded-[1.5rem] overflow-hidden mb-5 bg-slate-50 border border-slate-100 shadow-inner">
-                    // Wishlist lo image tag ila undali:
+      
                     <img src={`${API_BASE_URL.replace('/api', '')}${book.image}`} className="w-full h-full object-cover" alt={book.title} />
                   </div>
 
