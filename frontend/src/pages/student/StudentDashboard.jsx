@@ -99,43 +99,24 @@ export default function StudentDashboard() {
     }
   };
 
-const confirmRequest = async () => {
-  console.log("🚀 Request Start అయ్యింది mama!");
-  setIsSending(true);
+const confirmRequest = () => {
+  const freshUser = JSON.parse(localStorage.getItem('user'));
+  const phoneNumber = "917569896128"; // Nee WhatsApp number (91 prefix tho)
+  
+  const message = `📖 *New Book Request*%0A` + 
+                  `--------------------------%0A` +
+                  `👤 *Student:* ${freshUser.name}%0A` +
+                  `📧 *Email:* ${freshUser.email}%0A` +
+                  `📚 *Book:* ${selectedBook.title}%0A` +
+                  `--------------------------%0A` +
+                  `Please check the availability and bring on next Working Day! 🙏`;
 
-  try {
-    const freshUser = JSON.parse(localStorage.getItem('user'));
-    console.log("👤 User Data:", freshUser);
-
-    if (!freshUser || !freshUser.email) {
-      alert("Session expired mama! Please login again. 🙏");
-      navigate('/login');
-      return;
-    }
-
-    const requestData = {
-      studentName: freshUser.name,
-      studentEmail: freshUser.email,
-      bookTitle: selectedBook?.title, // Optional chaining add chesa safety kosam
-    };
-
-    console.log("📦 Sending Data to Backend:", requestData);
-
-    // Ikkada timeout handle cheyalani direct api call chestunnam
-    const res = await api.post('/books/request-book', requestData);
-    
-    console.log("✅ Backend Response:", res.data);
-    alert(`Request for "${selectedBook.title}" sent! 🙏`);
-    setShowModal(false);
-
-  } catch (err) {
-    console.error("❌ Request Fail అయ్యింది mama:", err);
-    const errorMsg = err.response?.data?.message || err.message || "Network Error";
-    alert("Server error: " + errorMsg);
-  } finally {
-    console.log("🏁 Loading stop అయ్యింది.");
-    setIsSending(false);
-  }
+  const whatsappURL = `https://wa.me/${phoneNumber}?text=${message}`;
+  
+  // Direct ga WhatsApp open chestundi
+  window.open(whatsappURL, '_blank');
+  setShowModal(false);
+  setIsSending(false);
 };
 
   const displayedBooks = books
