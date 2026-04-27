@@ -4,117 +4,160 @@ const multer = require('multer');
 const path = require('path');
 const Book = require('../models/Book');
 const nodemailer = require('nodemailer');
+const Request = require('../models/Request');
 
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => { cb(null, 'uploads/'); },
-  filename: (req, file, cb) => { cb(null, Date.now() + path.extname(file.originalname)); }
+    destination: (req, file, cb) => { cb(null, 'uploads/'); },
+    filename: (req, file, cb) => { cb(null, Date.now() + path.extname(file.originalname)); }
 });
 const upload = multer({ storage: storage });
 
-// POST: Request to Borrow a Book via Email
-router.post('/request-book', async (req, res) => {
-    const { studentName, studentEmail, bookTitle } = req.body;
-
-    // --- DEBUGGING LOG ---
-    console.log("-----------------------------------------");
-    console.log("📩 Incoming Request for Book:", bookTitle);
-    console.log("👤 From Student:", studentName);
-
-    // 1. Credentials Check
-    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-        console.error("❌ TERMINAL ERROR: EMAIL_USER or EMAIL_PASS is missing in .env file!");
-        return res.status(500).json({ message: ".env config missing!" });
-    }
-
-// routes/books.js
-const transporter = nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 587,
-    secure: false, // Port 587 ki idi false undali
-    auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
-    },
-    tls: {
-        // Railway network issues fix cheyadaniki idi compulsory mama
-        rejectUnauthorized: false,
-        minVersion: 'TLSv1.2'
-    }
-});
-
-    const mailOptions = {
-        from: process.env.EMAIL_USER,
-        to: 'rajuboyella737@gmail.com', 
-        replyTo: studentEmail,
-        subject: `📖 Borrow Request: ${bookTitle} from ${studentName}`,
-        html: `
-            <div style="font-family: sans-serif; padding: 20px; border: 1px solid #ddd;">
-                <h2>New Borrow Request</h2>
-                <p><strong>Student:</strong> ${studentName}</p>
-                <p><strong>Email:</strong> ${studentEmail}</p>
-                <p><strong>Book:</strong> ${bookTitle}</p>
-            </div>
-        `
-    };
-
-    try {
-        await transporter.sendMail(mailOptions);
-        console.log("✅ TERMINAL SUCCESS: Mail sent to Admin successfully!");
-        res.json({ message: "Borrow request sent to Admin! 🙏" });
-    } catch (err) {
-        // --- IDHI NEE TERMINAL LO ERROR CHUPISTHUNDHI ---
-        console.error("❌❌❌ NODEMAILER ERROR DETECTED ❌❌❌");
-        console.error("Error Message:", err.message);
-        console.error("Full Error Info:", err);
-        console.log("-----------------------------------------");
-
-        res.status(500).json({ 
-            message: "Mail failed", 
-            error: err.message,
-            hint: "Check if your App Password is correct and 2FA is enabled."
-        });
-    }
-});
-
+// --- 1. POST: Create New Book (COPIES FIX) ---
 router.post('/', upload.single('image'), async (req, res) => {
-  try {
-    const { title, author, category, description, status } = req.body; // status add chesa
-    const newBook = new Book({
-      title, author, category, description, status,
-      image: `/uploads/${req.file.filename}`
-    });
-    await newBook.save();
-    res.status(201).json(newBook);
-  } catch (err) {
-    res.status(500).json({ message: "Server Error" });
-  }
-});
-
-// Update Book Status API
-router.put('/:id', async (req, res) => {
-  try {
-    const { status } = req.body;
-    await Book.findByIdAndUpdate(req.params.id, { status });
-    res.json({ message: "Status Updated" });
-  } catch (err) { res.status(500).json({ message: "Update Failed" }); }
-});
-
-// GET & DELETE same as before...
-router.get('/', async (req, res) => {
-  try {
-    const books = await Book.find().sort({ createdAt: -1 });
-    res.json(books);
-  } catch (err) { res.status(500).json({ message: "Error" }); }
-});
-
-// --- DELETE BOOK API ---
-router.delete('/:id', async (req, res) => {
     try {
-        await Book.findByIdAndDelete(req.params.id);
-        res.json({ message: "Book removed from library forever! 🗑️" });
+        const { title, author, category, description, status, totalCopies } = req.body; 
+        const copies = parseInt(totalCopies) || 1;
+
+        const newBook = new Book({
+            title, author, category, description, status,
+            totalCopies: copies,
+            availableCopies: copies,
+            image: `/uploads/${req.file.filename}`
+        });
+
+        await newBook.save();
+        res.status(201).json(newBook);
     } catch (err) {
-        res.status(500).json({ message: "Failed to delete the book" });
+        res.status(500).json({ message: "Server Error" });
     }
+});
+// --- Update Book Status (Admin Inventory loop kosam) ---
+router.put('/:id', async (req, res) => {
+    try {
+        const { status } = req.body;
+        // ఇక్కడ బుక్ ని వెతికి దాని status ని అప్‌డేట్ చేస్తున్నాం
+        const updatedBook = await Book.findByIdAndUpdate(
+            req.params.id, 
+            { status: status }, 
+            { new: true }
+        );
+
+        if (!updatedBook) return res.status(404).json({ message: "Book not found" });
+
+        res.json({ message: "Status Updated Successfully! ✅", updatedBook });
+    } catch (err) {
+        console.error("Status Update Error:", err);
+        res.status(500).json({ message: "Update Failed" });
+    }
+});
+// --- 2. POST: Request a Book (Student sending request to Admin) ---
+// Note: Frontend nundi /api/books/request-book ki call vasthundi
+router.post('/request-book', async (req, res) => {
+    const { studentName, studentEmail, bookTitle, bookImage, userId } = req.body;
+
+    try {
+        // Database lo request create chesthunnam
+        const newRequest = new Request({
+            studentName,
+            studentEmail,
+            bookTitle,
+            bookImage,
+            userId,
+            status: 'Pending'
+        });
+        await newRequest.save();
+
+        // Optional: Admin ki email logic ikkada pettuko mama (nuvvu mundu raasindhe)
+
+        res.json({ message: "Borrow request saved and sent to Admin! 🙏", newRequest });
+    } catch (err) {
+        console.error("Request Error:", err);
+        res.status(500).json({ message: "Request failed" });
+    }
+});
+
+// --- 3. GET: My Requests (Student Dashboard kosam - 404 FIX) ---
+router.get('/my-requests/:email', async (req, res) => {
+    try {
+        const requests = await Request.find({ studentEmail: req.params.email }).sort({ createdAt: -1 });
+        res.json(requests);
+    } catch (err) {
+        res.status(500).json({ message: "Error fetching your requests" });
+    }
+});
+
+// --- 4. PUT: Handover (Copies update logic) ---
+router.put('/requests/:id/handover', async (req, res) => {
+    const { days } = req.body;
+    try {
+        const request = await Request.findById(req.params.id);
+        const book = await Book.findOne({ title: request.bookTitle });
+
+        // Inventory Logic: Copy తగ్గించడం
+        if (book && book.availableCopies > 0) {
+            book.availableCopies -= 1;
+            if (book.availableCopies === 0) book.status = 'Borrowed'; // Stock zero ayithe status marchu
+            await book.save();
+        }
+
+        const handoverDate = new Date();
+        const dueDate = new Date();
+        dueDate.setDate(handoverDate.getDate() + parseInt(days));
+
+        request.status = 'HandedOver';
+        request.handoverDate = handoverDate;
+        request.dueDate = dueDate;
+        await request.save();
+
+        res.json({ message: "Handover Success!", request });
+    } catch (err) {
+        res.status(500).json({ message: "Handover failed" });
+    }
+});
+
+// --- 5. PUT: Approve Request (Email to Approved status) ---
+router.put('/requests/:id/approve', async (req, res) => {
+    try {
+        const request = await Request.findByIdAndUpdate(req.params.id, { status: 'Approved' }, { new: true });
+        res.json({ message: "Approved successfully", request });
+    } catch (err) {
+        res.status(500).json({ message: "Approval failed" });
+    }
+});
+
+// --- 6. DELETE: Return Book (Clear Request & Add Copy back) ---
+router.delete('/requests/:id/return', async (req, res) => {
+    try {
+        const request = await Request.findById(req.params.id);
+        const book = await Book.findOne({ title: request.bookTitle });
+
+        if (book) {
+            book.availableCopies += 1;
+            book.status = 'Available'; // Malli stock loki vachindi kabatti
+            await book.save();
+        }
+
+        await Request.findByIdAndDelete(req.params.id);
+        res.json({ message: "Book Returned & Inventory Updated! ✅" });
+    } catch (err) {
+        res.status(500).json({ message: "Return failed" });
+    }
+});
+
+// Anni requests Admin kosam
+router.get('/requests', async (req, res) => {
+    try {
+        const requests = await Request.find().sort({ createdAt: -1 });
+        res.json(requests);
+    } catch (err) { res.status(500).json({ message: "Error" }); }
+});
+
+// All Books techevadu
+router.get('/', async (req, res) => {
+    try {
+        const books = await Book.find().sort({ createdAt: -1 });
+        res.json(books);
+    } catch (err) { res.status(500).json({ message: "Error" }); }
 });
 
 module.exports = router;
