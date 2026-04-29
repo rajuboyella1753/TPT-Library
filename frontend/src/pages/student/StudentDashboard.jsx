@@ -32,13 +32,14 @@ export default function StudentDashboard() {
   const user = JSON.parse(localStorage.getItem('user')) || { name: 'Seeker' };
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
-  useEffect(() => {
-    fetchBooks();
-    fetchUserRequests(); // Mama ikkada pilicha
-    if (user && user._id) {
-        fetchUserWishlist();
-    }
-  }, []);
+useEffect(() => {
+  fetchBooks();
+  // Mama, user login ayyi userId unte matrame fetch cheyali
+  if (user && user.userId) {
+      fetchUserRequests();
+      fetchUserWishlist();
+  }
+}, []);
 
   const fetchBooks = async () => {
     try {
@@ -51,13 +52,29 @@ export default function StudentDashboard() {
     }
   };
 
-  // --- NEW FUNCTION TO FETCH REQUESTS ---
-  const fetchUserRequests = async () => {
-    try {
-        const res = await api.get(`/books/my-requests/${user.email}`);
-        setMyRequests(res.data);
-    } catch (err) { console.log("Error fetching requests"); }
-  };
+const fetchUserRequests = async () => {
+  try {
+      const identifier = user.userId; 
+      console.log("DEBUG: Fetching requests for ID:", identifier); // 1. Check ID
+
+      const res = await api.get(`/books/my-requests/${identifier}`);
+      
+      console.log("DEBUG: Full API Response:", res); // 2. Check Full Response
+      console.log("DEBUG: Data Received from Backend:", res.data); // 3. Check Data
+
+      if (res.data.length === 0) {
+          console.warn("DEBUG: Data vachindi kani list empty ga undi mama!");
+      }
+
+      setMyRequests(res.data);
+  } catch (err) { 
+      console.error("DEBUG: API Call Failed mama! Detail Error:", err);
+      if (err.response) {
+          console.error("DEBUG: Backend Status Code:", err.response.status);
+          console.error("DEBUG: Backend Error Message:", err.response.data);
+      }
+  }
+};
 
   const fetchUserWishlist = async () => {
     try {
@@ -94,50 +111,51 @@ export default function StudentDashboard() {
     setShowModal(true);
   };
 
-  const handleCustomRequest = async () => {
-    setIsSending(true);
-    try {
-        const requestData = {
-            studentName: user.name,
-            studentEmail: user.email,
-            bookTitle: `UNAVAILABLE BOOK: ${searchTerm}`, 
-        };
-        await api.post('/books/request-book', requestData);
-        alert(`Request for "${searchTerm}" sent to Admin! Anji will check it soon. 🙏`);
-        setSearchTerm('');
-        fetchUserRequests();
-    } catch (err) {
-        alert("Failed to send special request.");
-    } finally {
-        setIsSending(false);
-    }
-  };
+const handleCustomRequest = async () => {
+  setIsSending(true);
+  try {
+      const requestData = {
+          studentName: user.name,
+          userId: user.userId, // <--- Change studentEmail to userId
+          bookTitle: `UNAVAILABLE BOOK: ${searchTerm}`, 
+      };
+      await api.post('/books/request-book', requestData);
+      alert(`Request for "${searchTerm}" sent to Admin! 🙏`);
+      setSearchTerm('');
+      fetchUserRequests();
+  } catch (err) {
+      alert("Failed to send special request.");
+  } finally {
+      setIsSending(false);
+  }
+};
 
 const confirmRequest = async () => {
   setIsSending(true);
-  try {
-    const requestData = {
-      userId: user._id,
-      studentName: user.name,
-      studentEmail: user.email,
-      bookId: selectedBook._id,
-      bookTitle: selectedBook.title,
-      bookImage: selectedBook.image, // Image pass chesthunna
-      requestDate: new Date()
-    };
+  
+  const requestData = {
+    // BACKEND destructing lo 'userId' ani undi kabatti ikkada 'userId' ane pampali
+    userId: user.userId, 
+    studentName: user.name,
+    bookTitle: selectedBook.title,
+    bookImage: selectedBook.image,
+    requestDate: new Date()
+  };
 
-    await api.post('/books/request-book', requestData); 
-    
-    alert(`Request for "${selectedBook.title}" sent successfully! Admin will review it. 🙏`);
+  console.log("DEBUG: Sending this data:", requestData); // Ikkada userId: "Raju123" undo ledho chudu
+
+  try {
+    const res = await api.post('/books/request-book', requestData); 
+    alert(`Request sent successfully! 🙏`);
     setShowModal(false);
     fetchUserRequests();
   } catch (err) {
-    console.error("Request error:", err);
-    alert("Failed to send request. Please try again.");
+    console.error("DEBUG: Request failed:", err);
   } finally {
     setIsSending(false);
   }
 };
+
 const handleRenew = async (id) => {
     try {
         await api.put(`/books/requests/${id}/renew`);
@@ -216,7 +234,7 @@ const handleRenew = async (id) => {
           <div className="relative w-full max-w-[150px] sm:max-w-md mx-2 sm:mx-4">
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-indigo-400" size={16} />
             <input 
-              type="text" placeholder="Search wisdom..." value={searchTerm}
+              type="text" placeholder="Search Book..." value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border-none rounded-xl focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all text-sm font-bold text-indigo-900 shadow-inner"
             />

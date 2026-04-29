@@ -26,13 +26,25 @@ router.post('/toggle', async (req, res) => {
     }
 });
 
-// 2. Get User Wishlist Data
+// --- GET USER WISHLIST (Student ID or Object ID based) ---
 router.get('/:userId', async (req, res) => {
     try {
-        const user = await User.findById(req.params.userId).populate('wishlist');
-        res.json(user.wishlist);
+        const { userId } = req.params;
+
+        // User ని వెతకాలి (మనం UserId తో వెతుకుతున్నామా లేదా MongoDB ID తోనా అన్నది ముఖ్యం)
+        const user = await User.findById(userId).populate('wishlist');
+        
+        // ఒకవేళ పాత ID ఫార్మాట్ వల్ల దొరకకపోతే.. UserID (Raju123) తో వెతకాలి
+        if (!user) {
+            const userById = await User.findOne({ userId: userId }).populate('wishlist');
+            if (!userById) return res.status(404).json({ message: "User not found" });
+            return res.json(userById.wishlist || []);
+        }
+
+        res.json(user.wishlist || []);
     } catch (err) {
-        res.status(500).json({ message: "Server Error" });
+        console.error("Wishlist Fetch Error Detail:", err);
+        res.status(500).json({ message: "Server Error fetching wishlist", error: err.message });
     }
 });
 

@@ -119,24 +119,29 @@ formData.append('totalCopies', parseInt(newBook.totalCopies) || 1);
     }
   };
 
-  const handleHandover = async (id, days) => {
-    try {
-        await api.put(`/books/requests/${id}/handover`, { days });
-        alert("Handover Success! 📅");
-        fetchRequests();
-    } catch (err) { alert("Handover failed"); }
-  };
+ const handleHandover = async (id, days) => {
+  try {
+      await api.put(`/books/requests/${id}/handover`, { days });
+      alert("Handover Success! 📅");
+      fetchRequests(); // Requests list update
+      fetchBooks();    // <--- IDHI ADD CHEY MAMA, Appude copies thagguthayi UI lo
+  } catch (err) { 
+      alert("Handover failed"); 
+  }
+};
 
-  const handleReturn = async (id) => {
-    if(window.confirm("Is the book returned back?")) {
-        try {
-            await api.delete(`/books/requests/${id}/return`);
-            alert("Request Cleared! Book is now Available. ✅");
-            fetchRequests();
-            fetchBooks(); 
-        } catch (err) { alert("Return failed"); }
-    }
-  };
+const handleReturn = async (id) => {
+  if(window.confirm("Is the book returned back?")) {
+      try {
+          await api.delete(`/books/requests/${id}/return`);
+          alert("Book is now Available. ✅");
+          fetchRequests();
+          fetchBooks(); // <--- This will refresh 3 to 4 copies
+      } catch (err) { 
+          alert("Return failed"); 
+      }
+  }
+};
 
   // --- NEW: APPROVE RENEWAL ---
   const handleApproveRenewal = async (requestId) => {

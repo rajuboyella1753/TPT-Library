@@ -1,19 +1,47 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion'; // AnimatePresence add chesa
-import { BookOpen, User, Mail, Lock, ChevronDown, X } from 'lucide-react'; // X icon add chesa
+import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  BookOpen, User, Mail, Lock, ChevronDown, X, 
+  ShieldCheck, DownloadCloud, Globe, Github, Twitter, Heart 
+} from 'lucide-react';
 import api from '../../api/api';
 
 const LoginPage = () => {
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    role: 'student',
+    loginId: '', 
     password: ''
   });
 
   const [showForgotModal, setShowForgotModal] = useState(false);
   const [resetData, setResetData] = useState({ email: '', newPassword: '' });
+
+  // --- PWA INSTALL LOGIC (START) ---
+  const [deferredPrompt, setDeferredPrompt] = useState(null);
+  const [showInstallBtn, setShowInstallBtn] = useState(false);
+
+  useEffect(() => {
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+      setShowInstallBtn(true);
+    });
+
+    window.addEventListener('appinstalled', () => {
+      setShowInstallBtn(false);
+    });
+  }, []);
+
+  const handleInstallClick = async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === 'accepted') {
+      setDeferredPrompt(null);
+      setShowInstallBtn(false);
+    }
+  };
+  // --- PWA INSTALL LOGIC (END) ---
 
   const navigate = useNavigate();
 
@@ -21,200 +49,220 @@ const LoginPage = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleResetPassword = async (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
+    const inputVal = formData.email || formData.loginId || ""; 
+    const loginIdentifier = inputVal.trim(); 
+
+    if (!loginIdentifier) {
+      alert("Please enter Email or User ID");
+      return;
+    }
+
     try {
-      const res = await api.post('/auth/reset-password', resetData);
-      alert(res.data.message);
-      setShowForgotModal(false);
-      setResetData({ email: '', newPassword: '' });
+      const res = await api.post('/auth/login', {
+        loginId: loginIdentifier,
+        password: formData.password
+      });
+
+      const { token, user } = res.data;
+      localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify(user));
+
+      alert(`Welcome back, ${user.name}!`);
+
+      if (user.role === 'super-admin') {
+        navigate('/super-admin');
+      } else if (user.role === 'admin') {
+        navigate('/admin');
+      } else {
+        navigate('/student');
+      }
     } catch (err) {
-      alert(err.response?.data?.message || "Failed to reset password");
+      if (err.response && err.response.status === 403) {
+        alert("Your account didnt approved at please contact admin for approval! 🙏");
+      } else {
+        alert(err.response?.data?.message || "Login Failed!");
+      }
     }
   };
 
-// --- LOGINPAGE.JS LO handleLogin FUNCTION UPDATE ---
-const handleLogin = async (e) => {
-  e.preventDefault();
-  try {
-    const res = await api.post('/auth/login', {
-      // Deeni valla mobile capital letters issue fix avtundi
-      email: formData.email.toLowerCase().trim(), 
-      password: formData.password
-    });
-
-    const { token, user } = res.data;
-    localStorage.setItem('token', token);
-    localStorage.setItem('user', JSON.stringify(user));
-
-    alert(`Welcome back, ${user.name}! Login Successful.`);
-
-    // Role based navigation
-    if (user.role === 'super-admin') {
-      navigate('/super-admin');
-    } else if (user.role === 'admin') {
-      navigate('/admin');
-    } else {
-      navigate('/student');
-    }
-  } catch (err) {
-    // Detailed error message from backend
-    const errorMsg = err.response?.data?.message || "Invalid Credentials!";
-    alert(errorMsg);
-    console.error("Login Error Details:", err.response?.data);
-  }
-};
-
   return (
-    <> {/* <--- Idhi Fragment, rendered content motham deeni lopale undali */}
-      <div className="min-h-screen flex items-center justify-center bg-[#f8faff] relative overflow-hidden p-4">
-        <div className="absolute top-[-10%] left-[-10%] w-72 h-72 bg-orange-200 rounded-full blur-3xl opacity-50 animate-pulse"></div>
-        <div className="absolute bottom-[-10%] right-[-10%] w-96 h-96 bg-blue-200 rounded-full blur-3xl opacity-50 animate-pulse"></div>
+    <div className="min-h-screen flex flex-col bg-[#f8faff] relative overflow-hidden">
+      
+      {/* --- MODERN NAVBAR --- */}
+      <nav className="relative z-[60] w-full px-6 py-5 flex items-center justify-between max-w-7xl mx-auto bg-transparent">
+        <div className="flex items-center gap-2">
+          <div className="bg-slate-900 p-2 rounded-xl shadow-lg">
+            <BookOpen size={20} className="text-orange-500" />
+          </div>
+          <span className="font-black text-lg tracking-tighter text-slate-800 uppercase italic">
+            ICEU <span className="text-orange-500">STALL</span>
+          </span>
+        </div>
 
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="relative z-10 w-full max-w-lg"
-        >
-          <div className="bg-white/80 backdrop-blur-xl p-8 md:p-12 rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.1)] border border-white">
+        <div className="flex items-center gap-4">
+          {showInstallBtn && (
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={handleInstallClick}
+              className="flex items-center gap-2 px-5 py-2.5 bg-orange-500 text-white rounded-full font-black text-[10px] uppercase tracking-widest shadow-lg shadow-orange-500/30 hover:bg-slate-900 transition-all border border-orange-400/20"
+            >
+              <DownloadCloud size={16} className="animate-bounce" /> Install App
+            </motion.button>
+          )}
+          <div className="hidden md:flex items-center gap-1 bg-white/50 px-3 py-1.5 rounded-full border border-white/50 backdrop-blur-sm">
+            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+            <span className="text-[9px] font-black text-slate-400 uppercase tracking-tighter">System Online</span>
+          </div>
+        </div>
+      </nav>
+
+      {/* --- MAIN LOGIN SECTION --- */}
+      <div className="flex-1 flex items-center justify-center p-4 relative">
+        <div className="absolute top-[10%] left-[-5%] w-72 h-72 bg-orange-200 rounded-full blur-[100px] opacity-40"></div>
+        <div className="absolute bottom-[10%] right-[-5%] w-96 h-96 bg-blue-200 rounded-full blur-[120px] opacity-40"></div>
+
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="relative z-10 w-full max-w-lg">
+          <div className="bg-white/80 backdrop-blur-xl p-8 md:p-12 rounded-[3.5rem] shadow-[0_25px_50px_-12px_rgba(0,0,0,0.08)] border border-white relative overflow-hidden">
+            
+            {/* Background design element */}
+            <div className="absolute top-0 right-0 w-32 h-32 bg-orange-50 rounded-bl-full opacity-50 -z-10"></div>
+
             <div className="text-center mb-10">
-              <motion.div 
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-tr from-orange-500 to-blue-600 rounded-2xl mb-4 shadow-lg"
-              >
-                <BookOpen className="text-white w-8 h-8" />
-              </motion.div>
-              <h1 className="text-3xl md:text-4xl font-black text-gray-800 tracking-tight">
-                TPT ICEU <span className="text-orange-500">Book</span> <span className="text-blue-600">Stall</span>
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-slate-900 rounded-[1.5rem] mb-6 shadow-2xl rotate-3">
+                <BookOpen className="text-orange-500 w-8 h-8" />
+              </div>
+              <h1 className="text-4xl font-black text-slate-800 tracking-tight uppercase italic leading-none">
+                ICEU <span className="text-orange-500 text-5xl">STALL</span>
               </h1>
-              <p className="text-gray-500 mt-2 font-medium">Welcome back! Please login to continue</p>
+              <p className="text-slate-400 mt-4 font-bold uppercase tracking-[0.2em] text-[10px] max-w-[200px] mx-auto leading-relaxed">
+                Student ID or Admin Email to Enter portal
+              </p>
             </div>
 
-            <form onSubmit={handleLogin} className="space-y-5">
-              <div className="group">
-                <label className="block text-sm font-bold text-gray-700 mb-1.5 ml-1 italic">Email Address</label>
-                <div className="relative">
-                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-blue-500 transition-colors" />
-                  <input
-                    type="email"
-                    name="email"
-                    placeholder="mail@example.com"
-                    className="w-full pl-12 pr-5 py-3.5 rounded-2xl bg-gray-50 border border-transparent focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all outline-none font-medium"
-                    onChange={handleChange}
-                    required
-                  />
+            <form onSubmit={handleLogin} className="space-y-6">
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-4">Identification</label>
+                <div className="relative group">
+                  <User className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300 group-focus-within:text-orange-500 transition-colors" />
+                  <input type="text" name="loginId" placeholder="Enter User ID / Email" className="w-full pl-14 pr-6 py-4.5 rounded-[1.8rem] bg-slate-50 border border-transparent focus:border-orange-200 focus:bg-white focus:ring-4 focus:ring-orange-500/5 transition-all font-bold text-slate-700 outline-none" onChange={handleChange} required />
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="group">
-                  <label className="block text-sm font-bold text-gray-700 mb-1.5 ml-1 italic">Role</label>
-                  <div className="relative">
-                    <select
-                      name="role"
-                      className="w-full px-4 py-3.5 rounded-2xl bg-gray-50 border border-transparent focus:bg-white focus:border-orange-500 focus:ring-4 focus:ring-orange-100 transition-all outline-none appearance-none cursor-pointer font-bold text-gray-600"
-                      value={formData.role}
-                      onChange={handleChange}
-                    >
-                      <option value="student">Student</option>
-                      <option value="admin">Admin</option>
-                      <option value="super-admin">Super Admin</option>
-                    </select>
-                    <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-                  </div>
-                </div>
-
-                <div className="group">
-                  <label className="block text-sm font-bold text-gray-700 mb-1.5 ml-1 italic">Password</label>
-                  <div className="relative">
-                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-blue-600 transition-colors" />
-                    <input
-                      type="password"
-                      name="password"
-                      placeholder="••••••••"
-                      className="w-full pl-12 pr-5 py-3.5 rounded-2xl bg-gray-50 border border-transparent focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all outline-none font-medium"
-                      onChange={handleChange}
-                      required
-                    />
-                  </div>
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-4">Security Key</label>
+                <div className="relative group">
+                  <Lock className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300 group-focus-within:text-orange-500 transition-colors" />
+                  <input type="password" name="password" placeholder="••••••••" className="w-full pl-14 pr-6 py-4.5 rounded-[1.8rem] bg-slate-50 border border-transparent focus:border-orange-200 focus:bg-white focus:ring-4 focus:ring-orange-500/5 transition-all font-bold text-slate-700 outline-none" onChange={handleChange} required />
                 </div>
               </div>
 
-              <div className="text-right">
-                <button 
-                  type="button"
-                  onClick={() => setShowForgotModal(true)}
-                  className="text-xs font-bold text-gray-400 hover:text-orange-500 transition-all italic"
-                >
-                  Forgot Password?
+              <div className="text-right px-2">
+                <button type="button" onClick={() => setShowForgotModal(true)} className="text-[10px] font-black text-slate-400 hover:text-orange-500 transition-all uppercase tracking-widest flex items-center gap-1 ml-auto">
+                  Forgot Access? <ChevronDown size={12} />
                 </button>
               </div>
 
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                type="submit"
-                className="w-full py-4 mt-4 bg-gradient-to-r from-orange-500 via-orange-600 to-blue-700 text-white font-bold rounded-2xl shadow-[0_10px_30px_rgba(249,115,22,0.3)] hover:shadow-orange-400/40 transition-all duration-300 text-lg tracking-wider"
+              <motion.button 
+                whileHover={{ scale: 1.02, backgroundColor: "#000" }} 
+                whileTap={{ scale: 0.98 }} 
+                type="submit" 
+                className="w-full py-5 bg-slate-900 text-white font-black rounded-[2rem] shadow-2xl shadow-slate-900/20 hover:shadow-orange-500/20 transition-all text-sm tracking-[0.4em] uppercase mt-4"
               >
-                SIGN IN
+                Enter Library
               </motion.button>
             </form>
 
-            <div className="mt-8 text-center border-t border-gray-100 pt-6">
-              <p className="text-gray-500 font-medium">
-                New here?{' '}
-                <Link to="/register" className="text-blue-600 font-bold hover:text-orange-600 transition-all">
-                  Create an account
-                </Link>
+            <div className="mt-10 text-center border-t border-slate-50 pt-8">
+              <p className="text-slate-400 font-bold text-[11px] uppercase tracking-widest">
+                New Seeker? <Link to="/register" className="text-orange-500 hover:text-slate-900 transition-colors ml-2 underline decoration-orange-200 underline-offset-4">Create ID Now</Link>
               </p>
             </div>
           </div>
         </motion.div>
       </div>
 
-      {/* --- Forgot Password Modal --- */}
+      {/* --- PROFESSIONAL FOOTER --- */}
+      <footer className="relative z-10 w-full bg-white border-t border-slate-100 py-12 px-6">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-10">
+          
+          <div className="flex flex-col items-center md:items-start">
+             <div className="flex items-center gap-2 mb-4">
+                <ShieldCheck className="text-orange-500" size={20} />
+                <span className="font-black text-slate-800 uppercase italic tracking-tighter">ICEU <span className="text-orange-500">STALL</span></span>
+             </div>
+             <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest leading-relaxed text-center md:text-left max-w-xs">
+                Empowering the youth of Tirupati through spiritual wisdom and divine knowledge. 
+             </p>
+          </div>
+
+          <div className="flex flex-col items-center gap-4">
+             {/* <div className="flex gap-6 text-slate-300">
+                <Globe size={18} className="hover:text-orange-500 transition-colors cursor-pointer" />
+                <Github size={18} className="hover:text-orange-500 transition-colors cursor-pointer" />
+                <Twitter size={18} className="hover:text-orange-500 transition-colors cursor-pointer" />
+             </div> */}
+             <p className="text-slate-300 text-[9px] font-black uppercase tracking-[0.4em]">© 2026 ICEU Digital Unit</p>
+          </div>
+
+          <div className="flex flex-col items-center md:items-end gap-1">
+             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
+               Designed with <Heart size={10} className="text-red-500 fill-red-500" /> for <span className="text-slate-800">ICEU STUDENTS</span>
+             </p>
+             <div className="h-1 w-20 bg-orange-500 rounded-full mt-1 opacity-20" />
+          </div>
+
+        </div>
+      </footer>
+
+      {/* --- FORGOT PASSWORD MODAL (UNCHANGED LOGIC) --- */}
       <AnimatePresence>
         {showForgotModal && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm text-slate-800">
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md">
             <motion.div 
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
-              className="bg-white w-full max-w-md p-8 rounded-[2rem] shadow-2xl relative"
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="bg-white w-full max-w-md p-10 rounded-[3rem] shadow-2xl relative border border-slate-100"
             >
-              <button onClick={() => setShowForgotModal(false)} className="absolute top-6 right-6 text-gray-400 hover:text-red-500 transition-colors">
+              <button onClick={() => setShowForgotModal(false)} className="absolute top-8 right-8 text-slate-300 hover:text-orange-500 transition-colors">
                 <X size={24} />
               </button>
+              <h2 className="text-3xl font-black text-slate-800 mb-2 italic tracking-tight">Reset Key</h2>
+              <p className="text-slate-400 text-xs mb-8 font-bold uppercase tracking-widest">Enter registered ID & new password.</p>
 
-              <h2 className="text-2xl font-black text-gray-800 mb-2 italic tracking-tight">Reset Password</h2>
-              <p className="text-gray-500 text-sm mb-6 font-medium">Enter your email and a fresh password.</p>
-
-              <form onSubmit={handleResetPassword} className="space-y-4">
+              <form onSubmit={async (e) => {
+                e.preventDefault();
+                try {
+                  const res = await api.post('/auth/reset-password', resetData);
+                  alert(res.data.message);
+                  setShowForgotModal(false);
+                } catch (err) { alert(err.response?.data?.message || "Failed!"); }
+              }} className="space-y-4">
                 <input
-                  type="email"
-                  placeholder="Registered Email"
-                  className="w-full px-5 py-3.5 rounded-xl bg-gray-50 border border-slate-100 outline-none focus:ring-4 focus:ring-orange-100 transition-all font-medium"
-                  onChange={(e) => setResetData({...resetData, email: e.target.value})}
-                  required
-                />
+                    type="text" 
+                    placeholder="User ID or Admin Email"
+                    className="w-full px-6 py-4 rounded-2xl bg-slate-50 border border-transparent focus:border-orange-200 outline-none focus:ring-4 focus:ring-orange-100 font-bold text-slate-700"
+                    onChange={(e) => setResetData({...resetData, loginId: e.target.value})}
+                    required
+                  />
                 <input
-                  type="password"
-                  placeholder="New Strong Password"
-                  className="w-full px-5 py-3.5 rounded-xl bg-gray-50 border border-slate-100 outline-none focus:ring-4 focus:ring-orange-100 transition-all font-medium"
+                  type="password" placeholder="New Strong Password"
+                  className="w-full px-6 py-4 rounded-2xl bg-slate-50 border border-transparent focus:border-orange-200 outline-none focus:ring-4 focus:ring-orange-100 font-bold text-slate-700"
                   onChange={(e) => setResetData({...resetData, newPassword: e.target.value})}
                   required
                 />
-                <button type="submit" className="w-full py-4 bg-slate-900 text-white font-black rounded-xl hover:bg-orange-600 shadow-lg transition-all uppercase tracking-widest text-xs">
-                  UPDATE PASSWORD
+                <button type="submit" className="w-full py-4.5 bg-slate-900 text-white font-black rounded-2xl hover:bg-orange-600 transition-all uppercase text-[10px] tracking-[0.3em] shadow-xl">
+                  Update Access Key
                 </button>
               </form>
             </motion.div>
           </div>
         )}
       </AnimatePresence>
-    </>
+    </div>
   );
 };
 

@@ -3,7 +3,6 @@ const router = express.Router();
 const multer = require('multer');
 const path = require('path');
 const Book = require('../models/Book');
-const nodemailer = require('nodemailer');
 const Request = require('../models/Request');
 
 const storage = multer.diskStorage({
@@ -12,7 +11,7 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage: storage });
 
-// --- 1. POST: Create New Book (COPIES FIX) ---
+// --- 1. POST: Create New Book ---
 router.post('/', upload.single('image'), async (req, res) => {
     try {
         const { title, author, category, description, status, totalCopies } = req.body; 
@@ -31,72 +30,67 @@ router.post('/', upload.single('image'), async (req, res) => {
         res.status(500).json({ message: "Server Error" });
     }
 });
-// --- Update Book Status (Admin Inventory loop kosam) ---
+
+// --- Update Book Status ---
 router.put('/:id', async (req, res) => {
     try {
         const { status } = req.body;
-        // ఇక్కడ బుక్ ని వెతికి దాని status ని అప్‌డేట్ చేస్తున్నాం
         const updatedBook = await Book.findByIdAndUpdate(
             req.params.id, 
             { status: status }, 
             { new: true }
         );
-
         if (!updatedBook) return res.status(404).json({ message: "Book not found" });
-
         res.json({ message: "Status Updated Successfully! ✅", updatedBook });
     } catch (err) {
-        console.error("Status Update Error:", err);
         res.status(500).json({ message: "Update Failed" });
     }
 });
-// --- 2. POST: Request a Book (Student sending request to Admin) ---
-// Note: Frontend nundi /api/books/request-book ki call vasthundi
+
+// --- 2. POST: Request a Book ---
 router.post('/request-book', async (req, res) => {
-    const { studentName, studentEmail, bookTitle, bookImage, userId } = req.body;
+    const { studentName, userId, bookTitle, bookImage } = req.body;
 
     try {
-        // Database lo request create chesthunnam
         const newRequest = new Request({
             studentName,
-            studentEmail,
+            studentId: userId, // Mapping frontend userId to database studentId
             bookTitle,
             bookImage,
-            userId,
             status: 'Pending'
         });
-        await newRequest.save();
-
-        // Optional: Admin ki email logic ikkada pettuko mama (nuvvu mundu raasindhe)
-
+        
+        await newRequest.save(); 
         res.json({ message: "Borrow request saved and sent to Admin! 🙏", newRequest });
     } catch (err) {
         console.error("Request Error:", err);
-        res.status(500).json({ message: "Request failed" });
+        res.status(500).json({ message: "Request failed!" });
     }
 });
 
-// --- 3. GET: My Requests (Student Dashboard kosam - 404 FIX) ---
-router.get('/my-requests/:email', async (req, res) => {
+// --- 3. GET: My Requests (FIXED: Unified single route with correct database field) ---
+router.get('/my-requests/:id', async (req, res) => {
     try {
-        const requests = await Request.find({ studentEmail: req.params.email }).sort({ createdAt: -1 });
+        const identifier = req.params.id;
+        // Database field name 'studentId' (from your screenshot)
+        // We search using the ID passed from frontend (Raju123)
+        const requests = await Request.find({ studentId: identifier }).sort({ createdAt: -1 });
         res.json(requests);
     } catch (err) {
-        res.status(500).json({ message: "Error fetching your requests" });
+        res.status(500).json({ message: "Server Error fetching requests" });
     }
 });
 
-// --- 4. PUT: Handover (Copies update logic) ---
+// --- 4. PUT: Handover ---
 router.put('/requests/:id/handover', async (req, res) => {
     const { days } = req.body;
     try {
         const request = await Request.findById(req.params.id);
         const book = await Book.findOne({ title: request.bookTitle });
 
-        // Inventory Logic: Copy తగ్గించడం
         if (book && book.availableCopies > 0) {
             book.availableCopies -= 1;
-            if (book.availableCopies === 0) book.status = 'Borrowed'; // Stock zero ayithe status marchu
+            if (book.availableCopies === 0) book.status = 'Borrowed';
             await book.save();
         }
 
@@ -115,7 +109,7 @@ router.put('/requests/:id/handover', async (req, res) => {
     }
 });
 
-// --- 5. PUT: Approve Request (Email to Approved status) ---
+// --- 5. Approve Request ---
 router.put('/requests/:id/approve', async (req, res) => {
     try {
         const request = await Request.findByIdAndUpdate(req.params.id, { status: 'Approved' }, { new: true });
@@ -125,7 +119,7 @@ router.put('/requests/:id/approve', async (req, res) => {
     }
 });
 
-// --- 6. DELETE: Return Book (Clear Request & Add Copy back) ---
+// --- 6. DELETE: Return Book ---
 router.delete('/requests/:id/return', async (req, res) => {
     try {
         const request = await Request.findById(req.params.id);
@@ -133,7 +127,7 @@ router.delete('/requests/:id/return', async (req, res) => {
 
         if (book) {
             book.availableCopies += 1;
-            book.status = 'Available'; // Malli stock loki vachindi kabatti
+            book.status = 'Available';
             await book.save();
         }
 
@@ -144,7 +138,7 @@ router.delete('/requests/:id/return', async (req, res) => {
     }
 });
 
-// Anni requests Admin kosam
+// Admin All Requests
 router.get('/requests', async (req, res) => {
     try {
         const requests = await Request.find().sort({ createdAt: -1 });
@@ -152,7 +146,7 @@ router.get('/requests', async (req, res) => {
     } catch (err) { res.status(500).json({ message: "Error" }); }
 });
 
-// All Books techevadu
+// All Books
 router.get('/', async (req, res) => {
     try {
         const books = await Book.find().sort({ createdAt: -1 });
