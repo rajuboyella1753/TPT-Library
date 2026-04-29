@@ -195,7 +195,7 @@ const handleRenew = async (id) => {
         <div className="p-6 flex flex-col h-full">
           <div className="flex items-center justify-between mb-12 px-2">
             <div className="flex items-center gap-3">
-              <img src="/UESI.png" alt="Logo" className="w-10 h-10 object-contain rounded-xl bg-white p-1" />
+              <img src="icons/icon-512x512.png" alt="Logo" className="w-10 h-10 object-contain rounded-xl bg-white p-1" />
               <div>
                 <h2 className="text-xl font-black text-white tracking-tighter leading-none uppercase">ICEU TPT</h2>
                 <p className="text-[9px] font-bold text-orange-400 uppercase tracking-widest mt-1">Spiritual Library</p>
@@ -271,7 +271,7 @@ const handleRenew = async (id) => {
                   <div className="mb-10 flex flex-col md:flex-row items-center justify-between gap-6 bg-white/80 backdrop-blur-md p-6 rounded-[2.5rem] border border-white shadow-xl shadow-slate-200/50">
                     <div className="flex items-center gap-5">
                       <div className="p-3 bg-indigo-50 rounded-2xl shadow-inner">
-                        <img src="/UESI.png" alt="Logo" className="w-10 h-10 sm:w-16 sm:h-16 object-contain" />
+                        <img src="icons/icon-512x512.png" alt="Logo" className="w-10 h-10 sm:w-16 sm:h-16 object-contain" />
                       </div>
                       <div>
                         <h1 className="text-2xl sm:text-4xl font-black text-indigo-950 tracking-tighter uppercase leading-none">

@@ -97,7 +97,7 @@ const LoginPage = () => {
             <BookOpen size={20} className="text-orange-500" />
           </div>
           <span className="font-black text-lg tracking-tighter text-slate-800 uppercase italic">
-            ICEU <span className="text-orange-500">STALL</span>
+            TPT DL <span className="text-orange-500">STALL</span>
           </span>
         </div>
 
@@ -135,7 +135,7 @@ const LoginPage = () => {
                 <BookOpen className="text-orange-500 w-8 h-8" />
               </div>
               <h1 className="text-4xl font-black text-slate-800 tracking-tight uppercase italic leading-none">
-                ICEU <span className="text-orange-500 text-5xl">STALL</span>
+                TPT DL <span className="text-orange-500 text-5xl">STALL</span>
               </h1>
               <p className="text-slate-400 mt-4 font-bold uppercase tracking-[0.2em] text-[10px] max-w-[200px] mx-auto leading-relaxed">
                 Student ID or Admin Email to Enter portal
@@ -191,7 +191,7 @@ const LoginPage = () => {
           <div className="flex flex-col items-center md:items-start">
              <div className="flex items-center gap-2 mb-4">
                 <ShieldCheck className="text-orange-500" size={20} />
-                <span className="font-black text-slate-800 uppercase italic tracking-tighter">ICEU <span className="text-orange-500">STALL</span></span>
+                <span className="font-black text-slate-800 uppercase italic tracking-tighter">TPT DL <span className="text-orange-500">STALL</span></span>
              </div>
              <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest leading-relaxed text-center md:text-left max-w-xs">
                 Empowering the youth of Tirupati through spiritual wisdom and divine knowledge. 
@@ -204,7 +204,7 @@ const LoginPage = () => {
                 <Github size={18} className="hover:text-orange-500 transition-colors cursor-pointer" />
                 <Twitter size={18} className="hover:text-orange-500 transition-colors cursor-pointer" />
              </div> */}
-             <p className="text-slate-300 text-[9px] font-black uppercase tracking-[0.4em]">© 2026 ICEU Digital Unit</p>
+             <p className="text-slate-300 text-[9px] font-black uppercase tracking-[0.4em]">© 2026 TPT DL Digital Unit</p>
           </div>
 
           <div className="flex flex-col items-center md:items-end gap-1">
