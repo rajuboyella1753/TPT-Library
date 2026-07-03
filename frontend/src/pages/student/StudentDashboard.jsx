@@ -25,7 +25,7 @@ export default function StudentDashboard() {
   const [selectedBook, setSelectedBook] = useState(null);
   const [isSending, setIsSending] = useState(false);
   const [bookLimit, setBookLimit] = useState(100);
-  
+  const [letters, setLetters] = useState([]);
   // --- NEW STATE FOR STUDENT REQUESTS ---
   const [myRequests, setMyRequests] = useState([]);
 
@@ -34,6 +34,7 @@ export default function StudentDashboard() {
 
 useEffect(() => {
   fetchBooks();
+  fetchPrayerLetters();
   // Mama, user login ayyi userId unte matrame fetch cheyali
   if (user && user.userId) {
       fetchUserRequests();
@@ -45,13 +46,21 @@ useEffect(() => {
     try {
       const res = await api.get('/books');
       setBooks(res.data);
+      setBookLimit(res.data.length);
       setLoading(false);
     } catch (err) {
       console.error("Error fetching books:", err);
       setLoading(false);
     }
   };
-
+ const fetchPrayerLetters = async () => {
+  try {
+    const res = await api.get('/prayer-letters');
+    setLetters(res.data);
+  } catch (err) {
+    console.error("Error fetching prayer letters");
+  }
+};
 const fetchUserRequests = async () => {
   try {
       const identifier = user.userId; 
@@ -197,7 +206,7 @@ const handleRenew = async (id) => {
             <div className="flex items-center gap-3">
               <img src="icons/icon-512x512.png" alt="Logo" className="w-10 h-10 object-contain rounded-xl bg-white p-1" />
               <div>
-                <h2 className="text-xl font-black text-white tracking-tighter leading-none uppercase">ICEU TPT</h2>
+                <h2 className="text-xl font-black text-white tracking-tighter leading-none uppercase">Library TPT</h2>
                 <p className="text-[9px] font-bold text-orange-400 uppercase tracking-widest mt-1">Spiritual Library</p>
               </div>
             </div>
@@ -212,6 +221,24 @@ const handleRenew = async (id) => {
             <SidebarLink icon={<Heart size={20}/>} label="My Wishlist" active={activePage === 'wishlist'} count={wishlist.length} onClick={() => {setActivePage('wishlist'); setIsSidebarOpen(false)}} />
             <SidebarLink icon={<Info size={20}/>} label="About Us" active={activePage === 'about'} onClick={() => {setActivePage('about'); setIsSidebarOpen(false)}} />
             <SidebarLink icon={<Phone size={20}/>} label="Contact Us" active={activePage === 'contact'} onClick={() => {setActivePage('contact'); setIsSidebarOpen(false)}} />
+            {letters.length > 0 && (
+        <div className="mt-6 p-4 bg-indigo-900/50 rounded-2xl border border-indigo-800">
+          <p className="text-[9px] font-black text-indigo-400 uppercase tracking-widest mb-3 px-2">Prayer Letters</p>
+          <div className="space-y-1">
+            {letters.map((letter) => (
+              <a 
+                key={letter._id} 
+                href={`${API_BASE_URL.replace('/api', '')}${letter.fileUrl}`} 
+                target="_blank" 
+                className="flex items-center gap-3 p-2 text-white hover:bg-white/10 rounded-lg text-[10px] font-bold uppercase"
+              >
+                <div className="w-1.5 h-1.5 rounded-full bg-orange-500" />
+                {letter.title}
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
           </nav>
 
           <button onClick={() => {localStorage.clear(); navigate('/login');}} className="flex items-center gap-4 px-6 py-5 text-indigo-400 hover:text-red-400 font-black mt-auto rounded-2xl hover:bg-white/5 transition-all">
@@ -262,7 +289,7 @@ const handleRenew = async (id) => {
                   initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}
                   className="mb-8 bg-gradient-to-r from-green-500 to-emerald-600 text-white p-5 rounded-[2rem] font-black text-center animate-bounce shadow-xl uppercase tracking-widest text-[10px] sm:text-xs border-b-4 border-emerald-700"
                 >
-                   🔥 Good News! Book Approved. Collect it on next ICEU Bible Study! 📖🙏
+                   🔥 Good News! Book Approved. Collect it on next Library Bible Study! 📖🙏
                 </motion.div>
               )}
               
@@ -275,7 +302,7 @@ const handleRenew = async (id) => {
                       </div>
                       <div>
                         <h1 className="text-2xl sm:text-4xl font-black text-indigo-950 tracking-tighter uppercase leading-none">
-                          TPT <span className="text-orange-500">ICEU</span>
+                          TPT <span className="text-orange-500">Library</span>
                         </h1>
                         <p className="text-[10px] sm:text-xs font-bold text-slate-400 uppercase tracking-[0.4em] mt-1.5">Spiritual Library</p>
                       </div>
@@ -284,16 +311,19 @@ const handleRenew = async (id) => {
                     <div className="flex items-center gap-3 bg-slate-50 px-5 py-3 rounded-2xl border border-slate-100 w-full md:w-auto shadow-inner">
                       <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest whitespace-nowrap">Show Items:</span>
                       <div className="relative flex-1 md:w-24">
-                        <select 
-                          value={bookLimit} 
-                          onChange={(e) => setBookLimit(Number(e.target.value))}
-                          className="w-full bg-transparent text-sm font-black text-slate-800 outline-none appearance-none cursor-pointer pr-4"
-                        >
-                          <option value={10}>10</option>
-                          <option value={20}>20</option>
-                          <option value={50}>50</option>
-                          <option value={100}>100</option>
-                        </select>
+                        {/* డైనమిక్ గా బుక్స్ కౌంట్ వచ్చేలా మార్చు */}
+<select 
+  value={bookLimit} 
+  onChange={(e) => setBookLimit(Number(e.target.value))}
+  className="w-full bg-transparent text-sm font-black text-slate-800 outline-none appearance-none cursor-pointer pr-4"
+>
+  {/* నీ బుక్స్ కౌంట్ ని బట్టి ఆప్షన్స్ జనరేట్ అవుతాయి */}
+  <option value={6}>6</option>
+  {books.length > 10 && <option value={10}>10</option>}
+  {books.length > 20 && <option value={20}>20</option>}
+  {books.length > 50 && <option value={50}>50</option>}
+  <option value={books.length}>All ({books.length})</option>
+</select>
                         <ChevronDown size={14} className="absolute right-0 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
                       </div>
                     </div>
@@ -368,6 +398,7 @@ const handleRenew = async (id) => {
                   )}
                 </>
               )}
+              
 
               {/* --- MY REQUESTS PAGE --- */}
               {activePage === 'requests' && (
@@ -506,7 +537,7 @@ const handleRenew = async (id) => {
               <div className="flex flex-col items-center gap-4">
                 <div className="flex items-center gap-4 text-indigo-950 font-black text-2xl sm:text-3xl uppercase tracking-tighter">
                   <img src="/UESI.png" alt="Logo" className="w-10 h-10 object-contain bg-white p-1 rounded-lg shadow-sm" />
-                  ICEU TPT <span className="text-orange-500">STALL</span>
+                  Library TPT <span className="text-orange-500">STALL</span>
                 </div>
                 <div className="w-24 h-1.5 bg-orange-500 rounded-full my-4 shadow-sm shadow-orange-200"></div>
                 <p className="text-[10px] font-black text-indigo-300 uppercase tracking-[0.6em]">© 2026 TIRUPATI SPIRITUAL WORLD</p>

@@ -14,10 +14,11 @@ export default function AdminDashboard() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [adminSearch, setAdminSearch] = useState('');
-  
+  const [selectedFile, setSelectedFile] = useState(null);
+const [letterTitle, setLetterTitle] = useState('');
+const [letters, setLetters] = useState([]); // ఇక్కడ అప్‌లోడ్ అయిన లిస్ట్ స్టోర్ అవుతుంది
   // --- NEW STATE FOR REQUESTS ---
   const [bookRequests, setBookRequests] = useState([]);
-
   const [newBook, setNewBook] = useState({
     title: '', author: '', status: 'Available', category: 'Sprituality', image: null, description: '', totalCopies: 1
   });
@@ -29,6 +30,7 @@ export default function AdminDashboard() {
   useEffect(() => { 
     fetchBooks(); 
     fetchRequests();
+    fetchLetters();
   }, []);
 
   const fetchBooks = async () => {
@@ -96,7 +98,10 @@ formData.append('totalCopies', parseInt(newBook.totalCopies) || 1);
       alert("Failed to delete book");
     }
   };
-
+const fetchPrayerLetters = async () => {
+    const res = await api.get('/prayer-letters');
+    setLetters(res.data);
+}; 
   const updateBookStatus = async (id, newStatus) => {
     try {
       await api.put(`/books/${id}`, { status: newStatus });
@@ -108,6 +113,22 @@ formData.append('totalCopies', parseInt(newBook.totalCopies) || 1);
     b.title.toLowerCase().includes(adminSearch.toLowerCase()) || 
     b.author.toLowerCase().includes(adminSearch.toLowerCase())
   );
+  // లెటర్స్ లిస్ట్ తీసుకురావడానికి
+const fetchLetters = async () => {
+    try {
+        const res = await api.get('/prayer-letters');
+        setLetters(res.data);
+    } catch (err) { console.error("Error fetching letters"); }
+};
+
+// డిలీట్ చేయడానికి
+const deleteLetter = async (id) => {
+    if(!window.confirm("Delete this letter?")) return;
+    try {
+        await api.delete(`/prayer-letters/${id}`);
+        fetchLetters(); // లిస్ట్ ఫ్రెష్ చేయడానికి
+    } catch (err) { alert("Delete failed"); }
+};
 
   const handleApprove = async (requestId) => {
     try {
@@ -151,7 +172,29 @@ const handleReturn = async (id) => {
         fetchRequests();
     } catch (err) { alert("Renewal failed!"); }
   };
+const uploadPrayerLetter = async () => {
+  if (!selectedFile) return alert("File select cheyyi mama!");
+  
+  const formData = new FormData();
+  formData.append('title', letterTitle);
+  formData.append('file', selectedFile); // కచ్చితంగా 'file' అని ఉండాలి (Backend లో upload.single('file') వాడావు కాబట్టి)
 
+  // DEBUGGING: ఇది చూడు
+  for (let pair of formData.entries()) {
+      console.log(pair[0] + ': ' + pair[1]);
+  }
+  
+  try {
+    await api.post('/prayer-letters', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' } // ఇది చాలా ముఖ్యం!
+    });
+    alert("PDF Uploaded!");
+    fetchLetters();
+  } catch (err) { 
+    console.error("Upload error:", err.response?.data); 
+    alert("Upload failed, console chudu!"); 
+  }
+};
   return (
     <div className="min-h-screen bg-[#f8fafc] flex font-sans text-slate-900 relative overflow-hidden">
       
@@ -173,6 +216,7 @@ const handleReturn = async (id) => {
             <SidebarButton icon={<PlusCircle size={20}/>} label="Add New Book" active={activeTab === 'add'} onClick={() => {setActiveTab('add'); setIsSidebarOpen(false);}} />
             <SidebarButton icon={<Package size={20}/>} label="Uploaded Items" active={activeTab === 'uploaded'} onClick={() => {setActiveTab('uploaded'); setIsSidebarOpen(false);}} />
             <SidebarButton icon={<Mail size={20}/>} label="Book Requests" active={activeTab === 'requests'} onClick={() => {setActiveTab('requests'); setIsSidebarOpen(false);}} />
+            <SidebarButton icon={<Upload size={20}/>} label="Prayer Letters" active={activeTab === 'prayer'} onClick={() => {setActiveTab('prayer'); setIsSidebarOpen(false);}} />
           </nav>
 
           <button onClick={() => {localStorage.clear(); navigate('/login');}} className="mt-auto flex items-center gap-3 p-4 text-red-400 hover:bg-red-500/10 rounded-2xl font-bold transition-all group">
@@ -437,6 +481,51 @@ const handleReturn = async (id) => {
                 </div>
               </motion.div>
             )}
+                              {/* Prayer Letter Upload Section */}
+{activeTab === 'prayer' && (
+  <motion.div initial={{opacity:0}} animate={{opacity:1}} className="max-w-xl mx-auto bg-white p-8 rounded-[2rem] shadow-xl border border-slate-100">
+    <h2 className="text-2xl font-black text-slate-900 uppercase mb-6">Upload PDF ({letters.length}/5)</h2>
+    
+    {letters.length < 5 ? (
+      <div className="space-y-4">
+        <input 
+          type="text" 
+          placeholder="Letter Title (e.g., July Prayer Letter)" 
+          className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl font-bold outline-none"
+          onChange={(e) => setLetterTitle(e.target.value)} 
+        />
+        
+        <label className="w-full flex flex-col items-center justify-center p-8 bg-slate-50 border-2 border-dashed border-slate-200 rounded-2xl cursor-pointer hover:border-orange-500 transition-all">
+          <Upload className="text-slate-400 mb-2" />
+          <span className="text-xs font-black text-slate-500 uppercase">{selectedFile ? selectedFile.name : "Select PDF File"}</span>
+          <input type="file" className="hidden" accept="application/pdf" onChange={(e) => setSelectedFile(e.target.files[0])} />
+        </label>
+
+        <button 
+          onClick={uploadPrayerLetter} 
+          disabled={!selectedFile || !letterTitle}
+          className="w-full py-4 bg-slate-900 text-white font-black rounded-2xl hover:bg-orange-500 transition-all uppercase tracking-widest"
+        >
+          Publish PDF
+        </button>
+      </div>
+    ) : (
+      <p className="text-red-500 font-bold text-center">Limit reached (5/5). Delete old ones to add new!</p>
+    )}
+
+    {/* అప్‌లోడ్ అయిన లిస్ట్ */}
+    <div className="mt-8 space-y-3">
+      {letters.map(l => (
+        <div key={l._id} className="flex justify-between items-center p-4 bg-slate-50 rounded-xl border border-slate-100">
+          <span className="text-xs font-bold truncate">{l.title}</span>
+          <button onClick={() => deleteLetter(l._id)} className="text-red-500 hover:bg-red-50 p-2 rounded-lg">
+            <Trash2 size={16} />
+          </button>
+        </div>
+      ))}
+    </div>
+  </motion.div>
+)}
           </AnimatePresence>
 
         </main>

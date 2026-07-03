@@ -4,7 +4,7 @@ const multer = require('multer');
 const path = require('path');
 const Book = require('../models/Book');
 const Request = require('../models/Request');
-
+const PrayerLetter = require('../models/PrayerLetter');
 const storage = multer.diskStorage({
     destination: (req, file, cb) => { cb(null, 'uploads/'); },
     filename: (req, file, cb) => { cb(null, Date.now() + path.extname(file.originalname)); }
@@ -137,7 +137,40 @@ router.delete('/requests/:id/return', async (req, res) => {
         res.status(500).json({ message: "Return failed" });
     }
 });
+// --- 7. DELETE: Remove Book from Library ---
+router.delete('/:id', async (req, res) => {
+    try {
+        const deletedBook = await Book.findByIdAndDelete(req.params.id);
+        if (!deletedBook) return res.status(404).json({ message: "Book not found" });
+        
+        res.json({ message: "Book Deleted Successfully! ✅" });
+    } catch (err) {
+        res.status(500).json({ message: "Delete failed" });
+    }
+});
+router.post('/prayer-letters', upload.single('file'), async (req, res) => {
+    try {
+        const newLetter = new PrayerLetter({
+            title: req.body.title,
+            fileUrl: `/uploads/${req.file.filename}`
+        });
+        await newLetter.save();
+        res.status(201).json(newLetter);
+    } catch (err) { res.status(500).json({ message: "Upload failed" }); }
+});
 
+router.get('/prayer-letters', async (req, res) => {
+    try {
+        const letters = await PrayerLetter.find().sort({ uploadDate: -1 });
+        res.json(letters);
+    } catch (err) { res.status(500).json({ message: "Error" }); }
+});
+
+// డిలీట్ చేయడానికి
+router.delete('/prayer-letters/:id', async (req, res) => {
+    await PrayerLetter.findByIdAndDelete(req.params.id);
+    res.json({ message: "Deleted" });
+});
 // Admin All Requests
 router.get('/requests', async (req, res) => {
     try {

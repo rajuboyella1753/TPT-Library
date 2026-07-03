@@ -40,6 +40,7 @@ app.use(express.json());
 app.use('/uploads', express.static('uploads'));
 
 // --- ROUTES ---
+app.use('/api', bookRoutes);
 app.use('/api/auth', authRoutes); 
 app.use('/api/books', bookRoutes); 
 app.use('/api/wishlist', wishlistRoutes);
