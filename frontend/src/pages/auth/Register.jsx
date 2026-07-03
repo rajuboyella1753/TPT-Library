@@ -72,6 +72,9 @@ const RegisterPage = () => {
               <UserPlus className="w-7 h-7" />
             </div>
             <h1 className="text-3xl font-black text-gray-800 tracking-tight">Create Account</h1>
+            <p className="text-[10px] font-black text-orange-500 uppercase tracking-[0.2em] animate-pulse">
+      Please enter details and submit. Please wait 40 sec. If page not opening, we are processing details...
+    </p>
           </div>
 
           <form onSubmit={handleRegister} className="grid grid-cols-1 md:grid-cols-2 gap-5">

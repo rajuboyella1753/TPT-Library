@@ -140,6 +140,9 @@ const LoginPage = () => {
               <p className="text-slate-400 mt-4 font-bold uppercase tracking-[0.2em] text-[10px] max-w-[200px] mx-auto leading-relaxed">
                 Student ID or Admin Email to Enter portal
               </p>
+              <p className="text-[10px] font-black text-orange-500 uppercase tracking-[0.2em] animate-pulse">
+      Please enter details and submit. Please wait 40 sec. If page not opening, we are processing details...
+    </p>
             </div>
 
             <form onSubmit={handleLogin} className="space-y-6">
